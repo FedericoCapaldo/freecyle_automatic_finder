@@ -23,15 +23,36 @@ def match(posts, my_desire):
                  toRet.append(p.get("href"))
         return toRet
 
-def execute_find_routine(url, wanted):
-        links = fetch_titles(url)
+def get_links(group_name):
+        req_url = get_group_link(group_name)
+        links = fetch_titles(req_url)
         relevant_posts = get_relevantish_titles(links)
-        matched = match(relevant_posts, wanted)
-        return matched
+        return relevant_posts
 
 def get_group_link(name):
     return "https://groups.freecycle.org/group/" + name + "/posts/offer"
 
+def get_all_posts_for_each_group(group_names):
+        group_map = {}
+        for group_name in group_names:
+            try:
+                print(f"fetching from {group_name}...")
+                group_map[group_name] = get_links(group_name)
+            except:
+                print(f"Error fetching data from {group_name}")
+        return group_map
+
+
+def perform_multiple_matching(stuff_I_want, group_names, posts_by_group):
+        for word in stuff_I_want:
+            print("---->", word.upper())
+            for group_name in group_names:
+                if group_name in posts_by_group:
+                    matched_posts = match(posts_by_group[group_name], word)
+                    matched_posts and print(f"{group_name}: ", matched_posts)
+                else:
+                    print(f"Data not found in {group_name}. Check that posts were downloaded correctly for this group.")
+            print()
 
 if __name__ == "__main__":
     group_names = [ "CityOfLondon",
@@ -42,16 +63,13 @@ if __name__ == "__main__":
                     "TowerHamletsUK",
                     "WestminsterUK",
                     "HammersmithandFulhamUK",
-                    "errorSite"
-                    "KensingtonandChelseaUK"
+                    "KensingtonandChelseaUK",
                     "HackneyUK",
                     "EalingUK",
                     "KentishtownUK",
                     "BarkingandDagenham" ]
 
-    for group_name in group_names:
-        print(group_name + ": ", execute_find_routine(get_group_link(group_name), "chair"))
+    posts_by_group = get_all_posts_for_each_group(group_names)
 
-
-    # relevant_posts = [(s.lower()) for s in relevant_titles]
-    # print(lower_titles)
+    stuff_I_want = ["kitchen"]
+    perform_multiple_matching(stuff_I_want, group_names, posts_by_group)
