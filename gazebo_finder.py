@@ -1,5 +1,7 @@
 from bs4 import BeautifulSoup
 import urllib.request
+import sys
+from send_email import send_email
 
 def fetch_titles(source_url):
     with urllib.request.urlopen(source_url) as url:
@@ -44,15 +46,19 @@ def get_all_posts_for_each_group(group_names):
 
 
 def perform_multiple_matching(stuff_I_want, group_names, posts_by_group):
+        message = ""
         for word in stuff_I_want:
-            print("---->", word.upper())
+            message += f"----> {word.upper()}\n"
             for group_name in group_names:
                 if group_name in posts_by_group:
                     matched_posts = match(posts_by_group[group_name], word)
-                    matched_posts and print(f"{group_name}: ", matched_posts)
+                    if matched_posts:
+                        message += f"{group_name}:\n" + "\n".join(matched_posts)
+                        message += "\n\n"
                 else:
                     print(f"Data not found in {group_name}. Check that posts were downloaded correctly for this group.")
-            print()
+            message += "\n\n"
+        return message
 
 if __name__ == "__main__":
     group_names = [ "CityOfLondon",
@@ -71,5 +77,9 @@ if __name__ == "__main__":
 
     posts_by_group = get_all_posts_for_each_group(group_names)
 
-    stuff_I_want = ["kitchen"]
-    perform_multiple_matching(stuff_I_want, group_names, posts_by_group)
+    stuff_I_want = ["chair", "garden", "kitchen", "whiteboard"]
+    main_body_message = perform_multiple_matching(stuff_I_want, group_names, posts_by_group)
+
+    subject = "Your FreeCycle Update - (Items Followed: " + " | ".join(stuff_I_want).title() + ")"
+    main_body_message = "Items followed: " + " | ".join(stuff_I_want).title() + "\n\n" + main_body_message
+    send_email(subject, main_body_message)
